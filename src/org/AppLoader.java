@@ -1,7 +1,5 @@
 package org;
 
-import java.io.FileNotFoundException;
-
 /**
  * Точка запуска
  */

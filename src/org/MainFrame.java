@@ -49,24 +49,20 @@ public class MainFrame extends javax.swing.JFrame {
         Time().start();
         ///// Сворачивание в трей
         try {
-            trayIcon = new TrayIcon(ImageIO.read(logo), "Tray test application");
-        } catch (IOException ex) {System.exit(42);}
+            trayIcon = new TrayIcon(ImageIO.read(logo), "Shutdown Timer");
+            systemTray.add(trayIcon);
+        } 
+        catch (IOException | AWTException ex ) {System.exit(42);}
         
         trayIcon.addActionListener((ActionEvent e) -> {
             setVisible(true);
             setState(JFrame.NORMAL);
-            systemTray.remove(trayIcon);
         });
         
         addWindowStateListener((WindowEvent e) -> {
             if(e.getNewState() == JFrame.ICONIFIED)
             {
                 setVisible(false);
-                try {
-                    systemTray.add(trayIcon);
-                } catch (AWTException ex) {
-                    ex.printStackTrace();
-                }
                 trayIcon.displayMessage("Tray test", "Window minimised to tray, double click to show", TrayIcon.MessageType.INFO);
             }
         }); 
