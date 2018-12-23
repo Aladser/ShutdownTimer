@@ -1,22 +1,17 @@
 package org;
 
-import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.SystemTray;
 import java.awt.Toolkit;
-import java.awt.TrayIcon;
-import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SpinnerListModel;
 import javax.swing.SpinnerModel;
@@ -25,7 +20,7 @@ import javax.swing.SpinnerModel;
  * Главное окно
  */
 public class MainFrame extends javax.swing.JFrame {
-    Thread clocks; // поток времени
+    Thread clocks; // поток для показа времени
     SimpleDateFormat formatTime = new SimpleDateFormat("dd.MM.yyyy  HH:mm:ss");
     String[] hours = {
         "00","01","02","03","04","05","06","07","08","09",
@@ -39,35 +34,22 @@ public class MainFrame extends javax.swing.JFrame {
         "40","41","42","43","44","45","46","47","48","49",
         "50","51","52","53","54","55","56","57","58","59"};
     SpinnerModel hourSpinModel, minSpinModel;
-    
-    File logo = new File("ico.png");
-    SystemTray systemTray = SystemTray.getSystemTray();
-    TrayIcon trayIcon;
+    boolean isEnabled = false;
     
     public MainFrame(){
         renderFrame();
         Time().start();
-        ///// Сворачивание в трей
-        try {
-            trayIcon = new TrayIcon(ImageIO.read(logo), "Shutdown Timer");
-            systemTray.add(trayIcon);
-        } 
-        catch (IOException | AWTException ex ) {System.exit(42);}
-        
-        trayIcon.addActionListener((ActionEvent e) -> {
-            setVisible(true);
-            setState(JFrame.NORMAL);
-        });
-        
-        addWindowStateListener((WindowEvent e) -> {
-            if(e.getNewState() == JFrame.ICONIFIED)
-            {
-                setVisible(false);
-                trayIcon.displayMessage("Tray test", "Window minimised to tray, double click to show", TrayIcon.MessageType.INFO);
+        // обработка закрытия окна
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter(){
+            @Override
+            public void windowClosing(WindowEvent evt){
+                if(isEnabled) ConsoleMngmnt.execute("shutdown /a");
+                System.exit(42);
             }
-        }); 
-        /////
+        });
     }
+    
     
     /** показывает дату */ 
     private Thread Time(){
@@ -85,13 +67,16 @@ public class MainFrame extends javax.swing.JFrame {
     
     /** Отрисовка окна */
     private void renderFrame(){
+        setIconImage( new ImageIcon( getClass().getResource("logo.png") ).getImage() );
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int xCenter = (screenSize.width - 500)/2;
-        int yCenter = (screenSize.height - 170)/2;
         
         initComponents();
+        switchButton.requestFocusInWindow();
+        int xCenter = (screenSize.width - 500)/2;
+        int yCenter = (screenSize.height - 170)/2;
         getContentPane().setBackground(java.awt.Color.WHITE);
         setBounds(xCenter, yCenter, 500 , 170);
+        
         hourSpinModel = new SpinnerListModel(hours);
         minSpinModel = new SpinnerListModel(minutes);
         hourSpinner.setModel(hourSpinModel);
@@ -102,7 +87,6 @@ public class MainFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        buttonGroup1 = new javax.swing.ButtonGroup();
         mainPanel = new javax.swing.JPanel();
         timeInfoPanel = new javax.swing.JLabel();
         timeInfoLabel = new javax.swing.JLabel();
@@ -113,6 +97,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Таймер выключения компьютера");
+        setAlwaysOnTop(true);
         setAutoRequestFocus(false);
         setBackground(new java.awt.Color(255, 255, 255));
         setResizable(false);
@@ -214,13 +199,9 @@ public class MainFrame extends javax.swing.JFrame {
             finalTimeInt += Integer.parseInt((String)minSpinner.getValue())*60;
             int delta = finalTimeInt - startTimeInt;
             if(delta < 0) delta += 86400;
-            // команда консоли
-            String command = "shutdown /s /t " + delta + " /f";
-            try {
-                Runtime.getRuntime().exec(command);
-            } catch (IOException ex) {
-                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-            }  
+            
+            ConsoleMngmnt.execute("shutdown /s /t " + delta + " /f");
+            isEnabled = true; 
         }
         else{
             hourSpinner.getEditor().getComponent(0).setForeground(Color.black);
@@ -228,17 +209,12 @@ public class MainFrame extends javax.swing.JFrame {
             hourSpinner.setEnabled(true);
             minSpinner.setEnabled(true);
             
-            String command = "shutdown /a";
-            try {
-                Runtime.getRuntime().exec(command);
-            } catch (IOException ex) {
-                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-            }  
+            ConsoleMngmnt.execute("shutdown /a");
+            isEnabled = false;  
         }
     }//GEN-LAST:event_switchButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JSpinner hourSpinner;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JSpinner minSpinner;
