@@ -67,7 +67,7 @@ public class MainFrame extends javax.swing.JFrame {
     
     /** Отрисовка окна */
     private void renderFrame(){
-        setIconImage( new ImageIcon( getClass().getResource("logo.png") ).getImage() );
+        setIconImage( new ImageIcon( getClass().getResource("logo_png.png") ).getImage() );
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         
         initComponents();

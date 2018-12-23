@@ -6,7 +6,6 @@ import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -20,7 +19,7 @@ public class AppLoader {
         SystemTray systemTray = SystemTray.getSystemTray();
         TrayIcon trayIcon;
         MainFrame f = new MainFrame();
-        BufferedImage trayIconImage = ImageIO.read(MainFrame.class.getResourceAsStream("logo.png")); 
+        BufferedImage trayIconImage = ImageIO.read(MainFrame.class.getResourceAsStream("logo_png.png")); 
         
         f.setVisible(true);
         
@@ -33,11 +32,7 @@ public class AppLoader {
             f.setState(JFrame.NORMAL);
         });
         f.addWindowStateListener((WindowEvent e) -> {
-            if(e.getNewState() == JFrame.ICONIFIED)
-            {
-                f.setVisible(false);
-                trayIcon.displayMessage("Tray test", "Window minimised to tray, double click to show", TrayIcon.MessageType.INFO);
-            }
+            if(e.getNewState() == JFrame.ICONIFIED) f.setVisible(false);
         });
         
     }
