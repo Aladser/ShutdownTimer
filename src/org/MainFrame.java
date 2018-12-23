@@ -3,6 +3,11 @@ package org;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.SimpleDateFormat;
@@ -11,10 +16,17 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
+import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.SpinnerListModel;
 import javax.swing.SpinnerModel;
+import javax.swing.SwingUtilities;
+import javax.swing.text.DefaultFormatter;
 
 /**
  * Главное окно
@@ -80,7 +92,8 @@ public class MainFrame extends javax.swing.JFrame {
         hourSpinModel = new SpinnerListModel(hours);
         minSpinModel = new SpinnerListModel(minutes);
         hourSpinner.setModel(hourSpinModel);
-        minSpinner.setModel(minSpinModel);      
+        minSpinner.setModel(minSpinModel);
+                
     }
 
     @SuppressWarnings("unchecked")
@@ -189,8 +202,7 @@ public class MainFrame extends javax.swing.JFrame {
             // смена элементов GUI
             hourSpinner.getEditor().getComponent(0).setForeground(Color.green);
             minSpinner.getEditor().getComponent(0).setForeground(Color.green);
-            hourSpinner.setEnabled(false);
-            minSpinner.setEnabled(false);
+            switchButton.requestFocusInWindow();
             // Вычисление таймера
             GregorianCalendar startTime = new GregorianCalendar();
             int startTimeInt = startTime.get(Calendar.HOUR_OF_DAY)*3600;
@@ -206,8 +218,6 @@ public class MainFrame extends javax.swing.JFrame {
         else{
             hourSpinner.getEditor().getComponent(0).setForeground(Color.black);
             minSpinner.getEditor().getComponent(0).setForeground(Color.black);
-            hourSpinner.setEnabled(true);
-            minSpinner.setEnabled(true);
             
             ConsoleMngmnt.execute("shutdown /a");
             isEnabled = false;  
