@@ -3,30 +3,15 @@ package org;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
-import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
 import javax.swing.SpinnerListModel;
-import javax.swing.SpinnerModel;
-import javax.swing.SwingUtilities;
-import javax.swing.text.DefaultFormatter;
 
 /**
  * Главное окно
@@ -45,25 +30,25 @@ public class MainFrame extends javax.swing.JFrame {
         "30","31","32","33","34","35","36","37","38","39",
         "40","41","42","43","44","45","46","47","48","49",
         "50","51","52","53","54","55","56","57","58","59"};
-    SpinnerModel hourSpinModel, minSpinModel;
-    boolean isEnabled = false;
+    CyclicNumberModel hourSpinModel, minSpinModel;
+    boolean isTimerActived = false;
+    int shutdownHours = 0, shutdownMinutes = 0;
+    GregorianCalendar curTime;
+    String command = "shutdown /s /t 3";
+    int i=0;
     
     public MainFrame(){
         renderFrame();
-        Time().start();
-        // обработка закрытия окна
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter(){
-            @Override
-            public void windowClosing(WindowEvent evt){
-                if(isEnabled) ConsoleMngmnt.execute("shutdown /a");
-                System.exit(42);
-            }
-        });
-    }
+        hourSpinModel = new CyclicNumberModel(hours);
+        minSpinModel = new CyclicNumberModel(minutes); 
+        hourSpinModel.setEditabled(true);
+        minSpinModel.setEditabled(true);
+        hourSpinner.setModel(hourSpinModel);
+        minSpinner.setModel(minSpinModel);
+        Time().start();   
+    }   
     
-    
-    /** показывает дату */ 
+    /** Показывает дату */ 
     private Thread Time(){
         return new Thread(() -> {
             while(true){
@@ -71,8 +56,32 @@ public class MainFrame extends javax.swing.JFrame {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    System.err.println("Thread Time: сломалась sleep()");
                 }
+            }
+        });
+    }
+    
+    /** Таймер */
+    private Thread Timer(){
+        return new Thread(()->{
+            while(isTimerActived){
+                curTime = new GregorianCalendar();
+                if(curTime.get(Calendar.HOUR_OF_DAY) == shutdownHours && curTime.get(Calendar.MINUTE) == shutdownMinutes){
+                    try {
+                        Runtime.getRuntime().exec(command);
+                        System.exit(42);
+                    } 
+                    catch (IOException ex) {
+                        System.err.println("Thread Timer: сломалась Runtime.getRuntime()");
+                    }
+                }
+                else
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        System.err.println("Thread Timer: сломалась sleep()");
+                    }
             }
         });
     }
@@ -88,12 +97,12 @@ public class MainFrame extends javax.swing.JFrame {
         int yCenter = (screenSize.height - 170)/2;
         getContentPane().setBackground(java.awt.Color.WHITE);
         setBounds(xCenter, yCenter, 500 , 170);
+
+        JTextField hourSpinnerTextField = ((JSpinner.DefaultEditor) hourSpinner.getEditor()).getTextField();
+        hourSpinnerTextField.setEditable(false);
+        JTextField minSpinnerTextField = ((JSpinner.DefaultEditor) minSpinner.getEditor()).getTextField();
+        minSpinnerTextField.setEditable(false);
         
-        hourSpinModel = new SpinnerListModel(hours);
-        minSpinModel = new SpinnerListModel(minutes);
-        hourSpinner.setModel(hourSpinModel);
-        minSpinner.setModel(minSpinModel);
-                
     }
 
     @SuppressWarnings("unchecked")
@@ -126,8 +135,12 @@ public class MainFrame extends javax.swing.JFrame {
         timeInfoLabel.setText("Таймер");
 
         hourSpinner.setFont(new java.awt.Font("Bahnschrift", 0, 20)); // NOI18N
+        hourSpinner.setFocusable(false);
+        hourSpinner.setRequestFocusEnabled(false);
 
         minSpinner.setFont(new java.awt.Font("Bahnschrift", 0, 20)); // NOI18N
+        minSpinner.setFocusable(false);
+        minSpinner.setRequestFocusEnabled(false);
 
         pointLabel.setFont(new java.awt.Font("Bahnschrift", 1, 20)); // NOI18N
         pointLabel.setText(":");
@@ -202,25 +215,21 @@ public class MainFrame extends javax.swing.JFrame {
             // смена элементов GUI
             hourSpinner.getEditor().getComponent(0).setForeground(Color.green);
             minSpinner.getEditor().getComponent(0).setForeground(Color.green);
+            hourSpinModel.setEditabled(false);
+            minSpinModel.setEditabled(false);
             switchButton.requestFocusInWindow();
-            // Вычисление таймера
-            GregorianCalendar startTime = new GregorianCalendar();
-            int startTimeInt = startTime.get(Calendar.HOUR_OF_DAY)*3600;
-            startTimeInt += startTime.get(Calendar.MINUTE)*60;
-            int finalTimeInt = Integer.parseInt((String)hourSpinner.getValue())*3600;
-            finalTimeInt += Integer.parseInt((String)minSpinner.getValue())*60;
-            int delta = finalTimeInt - startTimeInt;
-            if(delta < 0) delta += 86400;
-            
-            ConsoleMngmnt.execute("shutdown /s /t " + delta + " /f");
-            isEnabled = true; 
+            // Активация таймера
+            shutdownHours = Integer.parseInt((String)hourSpinner.getValue());
+            shutdownMinutes = Integer.parseInt((String)minSpinner.getValue());
+            isTimerActived = true;
+            Timer().start();
         }
         else{
             hourSpinner.getEditor().getComponent(0).setForeground(Color.black);
             minSpinner.getEditor().getComponent(0).setForeground(Color.black);
-            
-            ConsoleMngmnt.execute("shutdown /a");
-            isEnabled = false;  
+            hourSpinModel.setEditabled(true);
+            minSpinModel.setEditabled(true);
+            isTimerActived = false;
         }
     }//GEN-LAST:event_switchButtonActionPerformed
 
