@@ -11,7 +11,6 @@ import java.util.GregorianCalendar;
 import javax.swing.ImageIcon;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
-import javax.swing.SpinnerListModel;
 
 /**
  * Главное окно
@@ -38,13 +37,12 @@ public class MainFrame extends javax.swing.JFrame {
     int i=0;
     
     public MainFrame(){
-        renderFrame();
+        initComponents();
         hourSpinModel = new CyclicNumberModel(hours);
         minSpinModel = new CyclicNumberModel(minutes); 
-        hourSpinModel.setEditabled(true);
-        minSpinModel.setEditabled(true);
         hourSpinner.setModel(hourSpinModel);
         minSpinner.setModel(minSpinModel);
+        renderFrame();
         Time().start();   
     }   
     
@@ -91,7 +89,6 @@ public class MainFrame extends javax.swing.JFrame {
         setIconImage( new ImageIcon( getClass().getResource("logo_png.png") ).getImage() );
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         
-        initComponents();
         switchButton.requestFocusInWindow();
         int xCenter = (screenSize.width - 500)/2;
         int yCenter = (screenSize.height - 170)/2;
@@ -102,6 +99,7 @@ public class MainFrame extends javax.swing.JFrame {
         hourSpinnerTextField.setEditable(false);
         JTextField minSpinnerTextField = ((JSpinner.DefaultEditor) minSpinner.getEditor()).getTextField();
         minSpinnerTextField.setEditable(false);
+        
         
     }
 
@@ -217,7 +215,6 @@ public class MainFrame extends javax.swing.JFrame {
             minSpinner.getEditor().getComponent(0).setForeground(Color.green);
             hourSpinModel.setEditabled(false);
             minSpinModel.setEditabled(false);
-            switchButton.requestFocusInWindow();
             // Активация таймера
             shutdownHours = Integer.parseInt((String)hourSpinner.getValue());
             shutdownMinutes = Integer.parseInt((String)minSpinner.getValue());

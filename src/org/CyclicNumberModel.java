@@ -7,7 +7,7 @@ import javax.swing.SpinnerListModel;
  * @author aladser
  */
 public final class CyclicNumberModel extends SpinnerListModel{
-    private boolean isEditabled = false;
+    private boolean isEditabled = true;
     private final Object firstElement;
     private final Object lastElement;
     
