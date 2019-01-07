@@ -3,6 +3,7 @@ package org;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.TrayIcon;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -219,6 +220,10 @@ public class MainFrame extends javax.swing.JFrame {
             shutdownHours = Integer.parseInt((String)hourSpinner.getValue());
             shutdownMinutes = Integer.parseInt((String)minSpinner.getValue());
             isTimerActived = true;
+            if(shutdownMinutes < 10)
+                AppLoader.trayIcon.setToolTip("Выключение компьютера в "+shutdownHours+":0"+shutdownMinutes);
+            else
+                AppLoader.trayIcon.setToolTip("Выключение компьютера в "+shutdownHours+":"+shutdownMinutes);
             Timer().start();
         }
         else{
@@ -227,6 +232,7 @@ public class MainFrame extends javax.swing.JFrame {
             hourSpinModel.setEditabled(true);
             minSpinModel.setEditabled(true);
             isTimerActived = false;
+            AppLoader.trayIcon.setToolTip("Таймер выключения компьютера неактивен");
         }
     }//GEN-LAST:event_switchButtonActionPerformed
 
